@@ -34,13 +34,13 @@ public:
 
     int getPoolType() const { return poolType; }
 
-    const Mat& getBias() const { return bias; }
+    const cv::Mat& getBias() const { return bias; }
 
-    const vector<Mat>& getY() const { return y; }
+    const vector<cv::Mat>& getY() const { return y; }
 
-    const vector<Mat>& getD() const { return d; }
+    const vector<cv::Mat>& getD() const { return d; }
 
-    const vector<Mat>& getMaxPosition() const { return max_position; }
+    const vector<cv::Mat>& getMaxPosition() const { return max_position; }
 
 private:
     int inputWidth;   //输入图像的宽
@@ -55,11 +55,11 @@ private:
 
     int poolType;     //池化的方法
     
-    Mat bias;    //偏置, 一维float数组
+    cv::Mat bias;    //偏置, 一维float数组
 
-    Mat y;   //采样函数后神经元的输出,无激活函数，三维数组float型
-    Mat d;   //网络的局部梯度,三维数组float型
-    Mat max_position;   // 最大值模式下最大值的位置，三维数组float型
+    cv::Mat y;   //采样函数后神经元的输出,无激活函数，三维数组float型
+    cv::Mat d;   //网络的局部梯度,三维数组float型
+    cv::Mat max_position;   // 最大值模式下最大值的位置，三维数组float型
 
 
 public:

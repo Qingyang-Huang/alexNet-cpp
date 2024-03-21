@@ -1,26 +1,26 @@
 #include "poolingLayer.h"
 
 PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelSize, int stride, int padding, int inChannels, int outChannels, int poolType = MAXPOOL)
-    :inputWidth(inputWidth), inputHeight(inputHeight), kernelSize(kernelSize), stride(stride), padding(padding), inChannels(inChannels), outChannels(outChannels), poolType(poolType){
+  :inputWidth(inputWidth), inputHeight(inputHeight), kernelSize(kernelSize), stride(stride), padding(padding), inChannels(inChannels), outChannels(outChannels), poolType(poolType){
     
 
-    outputWidth = ((inputWidth - kernelSize + 2 * padding) / stride) + 1;
-    outputHeight = ((inputHeight - kernelSize + 2 * padding) / stride) + 1;
+  outputWidth = ((inputWidth - kernelSize + 2 * padding) / stride) + 1;
+  outputHeight = ((inputHeight - kernelSize + 2 * padding) / stride) + 1;
 
-    y = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
-    d = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
-    
-    max_position = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32SC2); // 存储位置(x, y)
+  y = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
+  d = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
+  
+  max_position = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32SC2); // 存储位置(x, y)
 
-    dx = cv::Mat::zeros(inChannels, inputHeight * inputWidth, CV_32F); 
+  dx = cv::Mat::zeros(inChannels, inputHeight * inputWidth, CV_32F); 
 
 }
 
 PoolingLayer::~PoolingLayer(){
-    delete d;
-    delete y;
-    delete max_position;
-    delete dx;
+  delete d;
+  delete y;
+  delete max_position;
+  delete dx;
 }
 
 //forwad section 
