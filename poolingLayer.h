@@ -10,7 +10,7 @@
 class PoolingLayer
 {
 public:
-    PoolingLayer(int inputWidth, int inputHeight, int kernelSize, int stride, int pad, int inChannels, int outChannels, int poolType = MAXPOOL);
+    PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride, int pad, int inChannels, int outChannels, int poolType = MAXPOOL);
 
     ~PoolingLayer();
 
@@ -22,7 +22,7 @@ public:
 
     int getOutputHeight() const { return outputHeight; }
 
-    int getKernelSize() const { return kernelSize; }
+    int getKernelHeight() const { return kernelHeight; }
 
     int getStride() const { return stride; }
 
@@ -45,7 +45,8 @@ public:
 private:
     int inputWidth;   //输入图像的宽
     int inputHeight;  //输入图像的长
-    int kernelSize; // 池化核的尺寸
+    int kernelHeight; // 池化核的尺寸
+    int kernelWidth;
     int stride;     // 池化操作的步长
     int padding;    // 边界填充的大小
     int outputWidth, outputHeight;
