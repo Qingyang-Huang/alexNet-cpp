@@ -53,8 +53,19 @@ void OutputLayer::backward(const cv::Mat outputData)
 {
     //softMax bp
     cv::subtract(y, outputData, d); // d = y - t
-
     // 计算权重的梯度和更新dx
-    dx = d * wData;
-          
+    dx = d * wData;          
+}
+
+void OutputLayer::updateWeight(const cv::Mat& input, float learningRate)
+{
+    cv::Mat dW = input.t() * d;
+    wData = wData - learningRate * dW;
+    bias = bias - learningRate * d;
+}
+
+void OutputLayer::zeroGrad()
+{
+    d = cv::Mat::zeros(1, outputNum, CV_32FC1);
+    dx = cv::Mat::zeros(1, inputNum, CV_32FC1);
 }

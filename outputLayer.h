@@ -24,7 +24,7 @@ public:
 
     const cv::Mat& getD() const { return d; }
 
-    bool getIsFullConnect() const { return isFullConnect; }
+    const cv::Mat& getDx() const { return dx; }
 
     const cv::Mat& getGrad() const { return dx; }
   
@@ -47,6 +47,8 @@ private:
 public:
     void forward(const cv::Mat& inputData);
     void backward(const cv::Mat outputData);
+    void updateWeight(const cv::Mat& input, float learningRate);
+    void zeroGrad();
 };
 
 #endif // OUTPUT_LAYER_H

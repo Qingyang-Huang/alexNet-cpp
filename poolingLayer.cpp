@@ -1,14 +1,13 @@
 #include "poolingLayer.h"
 
-PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride, int padding, int inChannels, int outChannels, int poolType = MAXPOOL)
-  :inputWidth(inputWidth), inputHeight(inputHeight), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride(stride), padding(padding), inChannels(inChannels), outChannels(outChannels), poolType(poolType){
+PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int padding, int inChannels, int outChannels, int poolType = MAXPOOL)
+  :inputWidth(inputWidth), inputHeight(inputHeight), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride_h(stride_h), stride_w(stride_w), padding(padding), inChannels(inChannels), outChannels(outChannels), poolType(poolType){
     
 
-  outputWidth = ((inputWidth - kernelWidth + 2 * padding) / stride) + 1;
-  outputHeight = ((inputHeight - kernelHeight + 2 * padding) / stride) + 1;
+  outputWidth = ((inputWidth - kernelWidth + 2 * padding) / stride_w) + 1;
+  outputHeight = ((inputHeight - kernelHeight + 2 * padding) / stride_h) + 1;
 
   y = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
-  d = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
   
   max_position = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32SC2); // 存储位置(x, y)
 
@@ -17,7 +16,6 @@ PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, in
 }
 
 PoolingLayer::~PoolingLayer(){
-  delete d;
   delete y;
   delete max_position;
   delete dx;
@@ -28,8 +26,8 @@ void PoolingLayer::forward(cv::Mat &inputData)
 {
   int paddedHeight = inputHeight + 2 * padding;
   int paddedWidth = inputWidth + 2 * padding;
-  int rows = (paddedHeight - kernelHeight) / stride + 1;
-  int cols = (paddedWidth - kernelWidth) / stride + 1;
+  int rows = (paddedHeight - kernelHeight) / stride_h + 1;
+  int cols = (paddedWidth - kernelWidth) / stride_w + 1;
   //分channel处理
   for (int c = 0; c < outChannels; ++c) {
     //每层channel添加padding
@@ -39,14 +37,14 @@ void PoolingLayer::forward(cv::Mat &inputData)
     //滑窗
     for (int i = 0; i < outputRows; ++i) {
       for (int j = 0; j < outputCols; ++j) {
-          cv::Rect window(j * stride, i * stride, kernelWidth, kernelHeight);
+          cv::Rect window(j * stride_w, i * stride_h, kernelWidth, kernelHeight);
           cv::Mat windowMat = paddedChannelMat(window);
           if (poolType == MAXPOOL) { //max  pooling
               double minVal, maxVal;
               cv::Point maxLoc;
               cv::minMaxLoc(windowMat, &minVal, &maxVal, nullptr, &maxLoc);
               y.at<float>(c, i * outputCols + j) = static_cast<float>(maxVal);
-              max_position.at<cv::Vec2i>(c, i * outputCols + j) = cv::Vec2i(maxLoc.x + j * stride - pad, maxLoc.y + i * stride - pad);
+              max_position.at<cv::Vec2i>(c, i * outputCols + j) = cv::Vec2i(maxLoc.x + j * stride_w - pad, maxLoc.y + i * stride_h - pad);
           } else if (poolType == AVGPOOL) { // average pooling
               cv::Scalar avgVal = cv::mean(windowMat);
               y.at<float>(c, i * outputCols + j) = static_cast<float>(avgVal[0]);
@@ -88,8 +86,8 @@ void PoolingLayer::backward(const cv::Mat& d0)
           //average pooling
           for (int m = 0; m < kernelHeight; ++m) {
             for (int n = 0; n < kernelWidth; ++n) {
-              int row = i * stride + m - padding;
-              int col = j * stride + n - padding;
+              int row = i * stride_h + m - padding;
+              int col = j * stride_w + n - padding;
               if (row >= 0 && row < inputHeight && col >= 0 && col < inputWidth) {
                   int idx = row * inputWidth + col; // 转换回二维索引
                   dx.at<float>(c * inputHeight * inputWidth + idx) += d0.at<float>(c, i * outputWidth + j) / (kernelHeight * kernelWidth);

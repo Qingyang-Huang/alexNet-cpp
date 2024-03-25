@@ -10,7 +10,7 @@
 class PoolingLayer
 {
 public:
-    PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride, int pad, int inChannels, int outChannels, int poolType = MAXPOOL);
+    PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int pad, int inChannels, int outChannels, int poolType = MAXPOOL);
 
     ~PoolingLayer();
 
@@ -40,6 +40,8 @@ public:
 
     const vector<cv::Mat>& getD() const { return d; }
 
+    const vector<cv::Mat>& getDx() const { return dx; }
+
     const vector<cv::Mat>& getMaxPosition() const { return max_position; }
 
 private:
@@ -47,7 +49,7 @@ private:
     int inputHeight;  //输入图像的长
     int kernelHeight; // 池化核的尺寸
     int kernelWidth;
-    int stride;     // 池化操作的步长
+    int stride_h, int stride_w;     // 池化操作的步长
     int padding;    // 边界填充的大小
     int outputWidth, outputHeight;
 
@@ -59,7 +61,7 @@ private:
     cv::Mat bias;    //偏置, 一维float数组
 
     cv::Mat y;   //采样函数后神经元的输出,无激活函数，三维数组float型
-    cv::Mat d;   //网络的局部梯度,三维数组float型
+    cv::Mat dx;   //网络的局部梯度,三维数组float型
     cv::Mat max_position;   // 最大值模式下最大值的位置，三维数组float型
 
 
