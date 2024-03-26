@@ -18,12 +18,16 @@ private:
     PoolingLayer S4;
     OutputLayer O5;
     
-    Mat e;   // 训练误差
-    Mat L;   // 瞬时误差能量 
-}
+    cv::Mat  e;   // 训练误差
+    cv::Mat  L;   // 瞬时误差能量 
 
 public:
-    void forward(Mat input);
+    void forward(cv::Mat  input);
+    void backward(cv::Mat  label);
+    void updateWeight(float learningRate);
+    void zeroGrad();
+    void train(cv::Mat  input, cv::Mat  label, float learningRate);
+}
 
 
 #endif // ALEXNET_H

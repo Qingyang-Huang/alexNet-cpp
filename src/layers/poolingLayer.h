@@ -70,6 +70,8 @@ public:
 
     void backward(const cv::Mat& d0);
 
+    void zeroGrad();
+
 };
 
 #endif // POOLINGLAYER_H

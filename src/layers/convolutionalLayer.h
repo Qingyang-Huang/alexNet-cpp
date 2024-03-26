@@ -80,6 +80,8 @@ private:
 public:
     void forward(vector<cv::Mat inputData, int cov_type);
     void backward(const cv::Mat& d0));
+    void updateWeight(const cv::Mat& input, float learningRate);
+    void zeroGrad();
 };
 
 #endif // CONVOLUTIONALLAYER_H

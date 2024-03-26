@@ -158,13 +158,22 @@ void ConvolutionalLayer::backward(const cv::Mat& d0) {
     }
 }
 
-void updateWeight(const cv::Mat& input, float learningRate) {
+void ConvolutionalLayer::updateWeight(const cv::Mat& input, float learningRate) {
     for (int i = 0; i < outChannels; ++i){
         for (int j = 0; j < inChannels; ++j){
             int kernelIndex = i * inChannels + j;
             kernel[kernelIndex] = kernel[kernelIndex] - learningRate * d[i] * input[j];
         }
         bias[i] = bias[i] - learningRate * d;
+    }
+}
+
+void ConvolutionalLayer::zeroGrad(){
+    for (int i = 0; i < outChannels; ++i){
+        d[i] = cv::Mat::zeros(outputHeight, outputWidth, CV_32F);
+    }
+    for (int i = 0; i < inChannels; ++i){
+        dx[i] = cv::Mat::zeros(inputHeight, inputWidth, CV_32F);
     }
 }
     

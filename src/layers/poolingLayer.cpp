@@ -99,3 +99,7 @@ void PoolingLayer::backward(const cv::Mat& d0)
     }
   }
 }
+
+void PoolingLayer::zeroGrad(){
+  dx = cv::Mat::zeros(inChannels, inputHeight * inputWidth, CV_32F);
+}

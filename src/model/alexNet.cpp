@@ -38,7 +38,7 @@ AlexNet::AlexNet(int inputSize_h, int inputSize_w, int outputSize){
     in_w = S8.getOutputWidth();
     O9 = new OutputLayer(in_h*in_w*cnn.S8.getOutChannels(), outputSize);    //输出层
 
-    e = Mat::zeros(1, O5.getOutputNum(), CV_32FC1);   //输出层的输出值与标签值之差
+    // e = Mat::zeros(1, O5.getOutputNum(), CV_32FC1);   //输出层的输出值与标签值之差
 }
 
 AlexNet::~AlexNet(){
@@ -51,7 +51,7 @@ AlexNet::~AlexNet(){
     delete L;
 }
 
-AlexNet::forward(cv::Mat input){
+void AlexNet::forward(cv::Mat input){
     C1.forward(input);
     S2.forward(C1.getY());
     C3.forward(S2.getY());
@@ -63,8 +63,44 @@ AlexNet::forward(cv::Mat input){
     O9.forward(S8.getY());
 }
 
-AlexNet::backward(cv::Mat label){
-    e = O9.getY() - label;
-    O9.backward(e);
+void AlexNet::backward(cv::Mat label){
+    // e = O9.getY() - label;
+    O9.backward(label);
     S8.backward(O9.getDx());
+    C7.backward(S8.getDx());
+    C6.backward(C7.getDx());
+    C5.backward(C6.getDx());
+    S4.backward(C5.getDx());
+    C3.backward(S4.getDx());
+    S2.backward(C3.getDx());
+    C1.backward(S2.getDx());
 }
+
+void AlexNet::updateWeight(float learningRate){
+    O9.updateWeight(S8.getY(), learningRate);
+    C7.updateWeight(C6.getY(), learningRate);
+    C6.updateWeight(C5.getY(), learningRate);
+    C5.updateWeight(S4.getY(), learningRate);
+    C3.updateWeight(S2.getY(), learningRate);
+    C1.updateWeight(input, learningRate);
+}
+
+void AlexNet::zeroGrad(){
+    O9.zeroGrad();
+    S8.zeroGrad();
+    C7.zeroGrad();
+    C6.zeroGrad();
+    C5.zeroGrad();
+    S4.zeroGrad();
+    C3.zeroGrad();
+    S2.zeroGrad();
+    C1.zeroGrad();
+}
+
+void AlexNet::train(cv::Mat input, cv::Mat label, float learningRate){
+    forward(input);
+    backward(label);
+    zeroGrad();
+    updateWeight(learningRate);
+}
+
