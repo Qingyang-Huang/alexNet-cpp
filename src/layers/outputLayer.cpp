@@ -27,8 +27,8 @@ OutputLayer::OutputLayer(int inputNum, int outputNum): inputNum(inputNum), outpu
 }
 
 OutputLayer::~OutputLayer() {
-    delete wData;
-    delete bias;
+    // delete wData;
+    // delete bias;
 }
 
 

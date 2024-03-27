@@ -35,14 +35,7 @@ ConvolutionalLayer::ConvolutionalLayer(int inputWidth, int inputHeight, int kern
     
 }
 
-ConvolutionalLayer::~ConvolutionalLayer() {
-      delete kernel;
-      delete bias;
-      delete y;
-      delete d;
-      delete dx;
-
-    }
+ConvolutionalLayer::~ConvolutionalLayer() {}
 
 cv::Mat ConvolutionalLayer::conv2D(const cv::Mat& inputData, cv::Mat& kernel) {
     // kernel是一个4D矩阵[outChannels, inChannels, kernelHeight, kernelWidth]
@@ -151,7 +144,8 @@ void ConvolutionalLayer::backward(const cv::Mat& d0) {
     for (int i = 0; i < outChannels; ++i){
         for (int j = 0; j < inChannels; ++j){
             int kernelIndex = i * inChannels + j;
-            Mat flipKernel = flip(kernel[kernelIndex], -1);   //卷积核先顺时针旋转180度
+            cv::Mat flipKernel;
+            cv::flip(kernel[kernelIndex], flipKernel, -1);   //卷积核先顺时针旋转180度
             cv::Mat dKernel = transConv2D(d.at<cv::Mat>(i), flipKernel); //update gradient
             dx.at<cv::Mat>(j) = dx.at<cv::Mat>(j) + dKernel; // 累加到输入的梯度上
         }
@@ -162,18 +156,14 @@ void ConvolutionalLayer::updateWeight(const cv::Mat& input, float learningRate) 
     for (int i = 0; i < outChannels; ++i){
         for (int j = 0; j < inChannels; ++j){
             int kernelIndex = i * inChannels + j;
-            kernel[kernelIndex] = kernel[kernelIndex] - learningRate * d[i] * input[j];
+            kernel[kernelIndex] = kernel[kernelIndex] - learningRate * d.at<float>(i) * input.at<float>(j);
         }
-        bias[i] = bias[i] - learningRate * d;
+        bias.at<float>(i) = bias.at<float>(i) - learningRate * d.at<float>(i);
     }
 }
 
 void ConvolutionalLayer::zeroGrad(){
-    for (int i = 0; i < outChannels; ++i){
-        d[i] = cv::Mat::zeros(outputHeight, outputWidth, CV_32F);
-    }
-    for (int i = 0; i < inChannels; ++i){
-        dx[i] = cv::Mat::zeros(inputHeight, inputWidth, CV_32F);
-    }
+    d = cv::Mat::zeros(outputHeight, outputWidth, CV_32F);
+    dx = cv::Mat::zeros(inputHeight, inputWidth, CV_32F);
 }
     

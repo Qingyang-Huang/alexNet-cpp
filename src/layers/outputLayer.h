@@ -2,6 +2,7 @@
 #define OUTPUT_LAYER_H
 #include <vector>
 #include <opencv2/core.hpp>
+#include "activation.h"
 
 class OutputLayer {
 public:
@@ -16,7 +17,7 @@ public:
 
     const cv::Mat& getWData() const { return wData; }
 
-    const cv::Mat& getBasicData() const { return basicData; }
+    const cv::Mat& getBasicData() const { return bias; }
 
     const cv::Mat& getV() const { return v; }
 

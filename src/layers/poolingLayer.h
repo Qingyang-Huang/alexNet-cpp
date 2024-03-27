@@ -24,9 +24,13 @@ public:
 
     int getKernelHeight() const { return kernelHeight; }
 
-    int getStride() const { return stride; }
+    int getKernelWidth() const { return kernelWidth; }
 
-    int getPad() const { return pad; }
+    int getStride_h() const { return stride_h; }
+
+    int getStride_w() const { return stride_w; }
+
+    int getPadding() const { return padding; }
 
     int getInChannels() const { return inChannels; }
 
@@ -36,20 +40,18 @@ public:
 
     const cv::Mat& getBias() const { return bias; }
 
-    const vector<cv::Mat>& getY() const { return y; }
+    const cv::Mat& getY() const { return y; }
 
-    const vector<cv::Mat>& getD() const { return d; }
+    const cv::Mat& getDx() const { return dx; }
 
-    const vector<cv::Mat>& getDx() const { return dx; }
-
-    const vector<cv::Mat>& getMaxPosition() const { return max_position; }
+    const cv::Mat& getMaxPosition() const { return max_position; }  
 
 private:
     int inputWidth;   //输入图像的宽
     int inputHeight;  //输入图像的长
     int kernelHeight; // 池化核的尺寸
     int kernelWidth;
-    int stride_h, int stride_w;     // 池化操作的步长
+    int stride_h, stride_w;     // 池化操作的步长
     int padding;    // 边界填充的大小
     int outputWidth, outputHeight;
 
@@ -66,7 +68,7 @@ private:
 
 
 public:
-    void forward(cv::Mat &inputData);
+    void forward(const cv::Mat &inputData);
 
     void backward(const cv::Mat& d0);
 

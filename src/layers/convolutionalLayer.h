@@ -1,8 +1,8 @@
 #ifndef CONVOLUTIONALLAYER_H
 #define CONVOLUTIONALLAYER_H
 
-#include <vector
-#include <opencv2/core.hpp
+#include <vector>
+#include <opencv2/core.hpp>
 #include "activation.h"
 
 #define FULL 0
@@ -25,8 +25,6 @@ public:
     int getKernelHeight() const { return kernelHeight; }
 
     int getKernelWidth() const { return kernelWidth; }
-
-    const cv::Mat& getKernel() const { return kernel; }
 
     int getStride_h() const { return stride_h; }
 
@@ -61,7 +59,7 @@ private:
     int kernelHeight;      // 卷积核的尺寸
     int kernelWidth;
     int padding; 
-    int stride_h, int stride_w;
+    int stride_h, stride_w;
 
     int inChannels;   // 输入图像的数目
     int outChannels;  // 输出图像的数目
@@ -78,8 +76,10 @@ private:
     cv::Mat dx; 
 
 public:
-    void forward(vector<cv::Mat inputData, int cov_type);
-    void backward(const cv::Mat& d0));
+    void forward(const cv::Mat inputData);
+    cv::Mat conv2D(const cv::Mat& inputData, cv::Mat& kernel);
+    void backward(const cv::Mat& d0);
+    cv::Mat transConv2D(const cv::Mat& input, const cv::Mat& kernel);
     void updateWeight(const cv::Mat& input, float learningRate);
     void zeroGrad();
 };

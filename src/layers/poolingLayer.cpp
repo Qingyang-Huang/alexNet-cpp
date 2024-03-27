@@ -1,6 +1,6 @@
 #include "poolingLayer.h"
 
-PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int padding, int inChannels, int outChannels, int poolType = MAXPOOL)
+PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int padding, int inChannels, int outChannels, int poolType)
   :inputWidth(inputWidth), inputHeight(inputHeight), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride_h(stride_h), stride_w(stride_w), padding(padding), inChannels(inChannels), outChannels(outChannels), poolType(poolType){
     
 
@@ -16,22 +16,22 @@ PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, in
 }
 
 PoolingLayer::~PoolingLayer(){
-  delete y;
-  delete max_position;
-  delete dx;
+  // delete y;
+  // delete max_position;
+  // delete dx;
 }
 
 //forwad section 
-void PoolingLayer::forward(cv::Mat &inputData)
+void PoolingLayer::forward(const cv::Mat &inputData)
 {
   int paddedHeight = inputHeight + 2 * padding;
   int paddedWidth = inputWidth + 2 * padding;
-  int rows = (paddedHeight - kernelHeight) / stride_h + 1;
-  int cols = (paddedWidth - kernelWidth) / stride_w + 1;
+  int outputRows = (paddedHeight - kernelHeight) / stride_h + 1;
+  int outputCols = (paddedWidth - kernelWidth) / stride_w + 1;
   //分channel处理
   for (int c = 0; c < outChannels; ++c) {
     //每层channel添加padding
-    cv::Mat channelMat = input.row(c).reshape(0, inputHeight);
+    cv::Mat channelMat = inputData.row(c).reshape(0, inputHeight);
     cv::Mat paddedChannelMat;
     cv::copyMakeBorder(channelMat, paddedChannelMat, padding, padding, padding, padding, cv::BORDER_CONSTANT, 0);
     //滑窗
@@ -44,7 +44,7 @@ void PoolingLayer::forward(cv::Mat &inputData)
               cv::Point maxLoc;
               cv::minMaxLoc(windowMat, &minVal, &maxVal, nullptr, &maxLoc);
               y.at<float>(c, i * outputCols + j) = static_cast<float>(maxVal);
-              max_position.at<cv::Vec2i>(c, i * outputCols + j) = cv::Vec2i(maxLoc.x + j * stride_w - pad, maxLoc.y + i * stride_h - pad);
+              max_position.at<cv::Vec2i>(c, i * outputCols + j) = cv::Vec2i(maxLoc.x + j * stride_w - padding, maxLoc.y + i * stride_h - padding);
           } else if (poolType == AVGPOOL) { // average pooling
               cv::Scalar avgVal = cv::mean(windowMat);
               y.at<float>(c, i * outputCols + j) = static_cast<float>(avgVal[0]);

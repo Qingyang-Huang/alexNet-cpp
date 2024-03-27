@@ -12,12 +12,21 @@ int main() {
     label.at<float>(0, 5) = 1.0; // 第6个元素设置为1
     label.at<float>(0, 7) = 1.0; // 第8个元素设置为1
 
-    //学习率递减0.03~0.001
-    float alpha = 0.03 - 0.029*n / (trainNum - 1);  
+    int epoch = 1;
+    int trainNum = 1;
+    for (int e = 0; e < epoch; e++){
+        for (int n = 0; n < trainNum; n++){
+            //学习率递减
+            float alpha = 0.03 - 0.029*n / (trainNum - 1);  
+            AlexNet* alexNet;
+            alexNet = new AlexNet(224, 224, 10);
+            alexNet->forward(randomMat);
+            alexNet->backward(randomMat, label);
+            alexNet->updateWeight(randomMat, alpha);
+        }
+    }
 
-    alexNet = new AlexNet(224, 224, 10);
-    alexNet->forward(randomMat);
-    alexNet->backward(label);
+    
 
     return 0;
 }

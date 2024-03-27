@@ -1,15 +1,25 @@
 #ifndef ACTIVATIONLAYER_H
 #define ACTIVATIONLAYER_H
 
-#include <math>
+#include <cmath>
 
 #define RELU 0
 #define SIGMOID 1
 #define TANH 2
 
-inline float relu(float x) { return max(0.0f, x); }
+inline float relu(float x) { return fmax(0.0f, x); }
 inline float sigmoid(float x) { return 1.0f / (1.0f + exp(-x)); }
-inline float tanh(float x) { return tanh(x); }
+inline float softmax(float x) { return exp(x); }
+inline cv::Mat softmax(const cv::Mat& v) {
+    double minVal, maxVal;
+    cv::minMaxLoc(v, &minVal, &maxVal); // Find the global minimum and maximum in v
+    
+    cv::Mat exp_v;
+    cv::exp(v - maxVal, exp_v); // Subtract maxVal for numerical stability
+    double sum = cv::sum(exp_v)[0];
+    return exp_v / sum;
+}
+// inline float tanh(float x) { return tanh(x); }
 
 inline float reluDerivative(float x) { return x > 0 ? 1 : 0; }
 inline float sigmoidDerivative(float x) { return sigmoid(x) * (1 - sigmoid(x)); }
