@@ -1,0 +1,17 @@
+# Ignore node_modules directory
+CMakeFiless/
+
+build/
+
+.vscode/
+.idea/
+
+*.exe
+*.dll
+*.so
+
+*.log
+
+*.tmp
+*.swp
+*.bak
