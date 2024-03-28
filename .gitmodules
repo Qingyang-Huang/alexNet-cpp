@@ -1,0 +1,6 @@
+[submodule "gtest"]
+	path = gtest
+	url = https://github.com/Qingyang-Huang/googletest.git
+[submodule "lib/openc906"]
+	path = lib/openc906
+	url = git@github.com:Qingyang-Huang/openc906.git
