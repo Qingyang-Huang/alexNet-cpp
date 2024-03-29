@@ -2,6 +2,7 @@
 #define ACTIVATIONLAYER_H
 
 #include <cmath>
+#include <opencv2/core.hpp>
 
 #define RELU 0
 #define SIGMOID 1

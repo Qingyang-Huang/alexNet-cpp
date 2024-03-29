@@ -44,9 +44,6 @@ cv::Mat ConvolutionalLayer::conv2D(const cv::Mat& inputData, cv::Mat& kernel) {
     cv::Mat exInputData;
     cv::copyMakeBorder(inputData, exInputData, padding, padding, padding, padding, cv::BORDER_CONSTANT, 0);
 
-    int outputHeight = ((exInputData.rows - kernelHeight + 2 * padding) / stride_h) + 1;
-    int outputWidth = ((exInputData.cols - kernelWidth + 2 * padding) / stride_w) + 1;
-
     cv::Mat OutputData = cv::Mat::zeros(outputHeight, outputWidth, CV_32F);
 
     for (int y = 0; y < outputHeight; ++y) {

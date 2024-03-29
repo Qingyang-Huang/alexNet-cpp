@@ -1,7 +1,7 @@
 #ifndef OUTPUT_LAYER_H
 #define OUTPUT_LAYER_H
 #include <vector>
-#include <opencv2/core.hpp>
+// #include <opencv2/core.hpp>
 #include "activation.h"
 
 class OutputLayer {

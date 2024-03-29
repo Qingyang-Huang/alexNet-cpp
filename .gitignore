@@ -15,3 +15,5 @@ build/
 *.tmp
 *.swp
 *.bak
+
+.DS_Store
