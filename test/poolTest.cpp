@@ -1,15 +1,15 @@
 #include <gtest/gtest.h>
-#include "layers/poolingLayer.h"
+#include "layers/poolingLayer2D.h"
 #include <opencv2/core/core.hpp>
 #include "testUtils.h"
 
-TEST(PoolingLayer, MaxPooling) {
+TEST(PoolingLayer2D, MaxPooling) {
     cv::Mat input = (cv::Mat_<float>(1, 4*4) << 1, 2, 3, 4,
                                              5, 6, 7, 8,
                                              9, 10, 11, 12,
                                              13, 14, 15, 16);
  
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 0, 1, 1, MAXPOOL); 
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 0, 1, 1, MAXPOOL); 
 
     poolLayer.forward(input);
 
@@ -19,12 +19,12 @@ TEST(PoolingLayer, MaxPooling) {
     EXPECT_TRUE(matEqual(poolLayer.getY(), expected));
 }
 
-TEST(PoolingLayer, MaxPooling2) {
+TEST(PoolingLayer2D, MaxPooling2) {
     cv::Mat input = (cv::Mat_<float>(1, 4*4) << 1, 2, 3, 4,
                                              5, 6, 7, 8,
                                              9, 10, 11, 12,
                                              13, 14, 15, 16);
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 1, 1, 1, MAXPOOL); 
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 1, 1, 1, MAXPOOL); 
 
     poolLayer.forward(input);
 
@@ -36,11 +36,11 @@ TEST(PoolingLayer, MaxPooling2) {
     EXPECT_TRUE(matEqual(poolLayer.getY(), expected));
 }
 
-TEST(PoolingLayer, MaxPooling3) {
+TEST(PoolingLayer2D, MaxPooling3) {
     cv::Mat input = (cv::Mat_<float>(1, 3*3) << 1, 2, 3, 4,
                                              5, 6, 7, 8,
                                              9);
-    PoolingLayer poolLayer(3, 3, 2, 2, 2, 2, 1, 1, 1, MAXPOOL); 
+    PoolingLayer2D poolLayer(3, 3, 2, 2, 2, 2, 1, 1, 1, MAXPOOL); 
 
     poolLayer.forward(input);
 
@@ -50,12 +50,12 @@ TEST(PoolingLayer, MaxPooling3) {
     EXPECT_TRUE(matEqual(poolLayer.getY(), expected));
 }
 
-TEST(PoolingLayer, MaxPooling4) {
+TEST(PoolingLayer2D, MaxPooling4) {
     cv::Mat input = cv::Mat(3, 16, CV_32F);
 
     cv::randu(input, cv::Scalar::all(1), cv::Scalar::all(10));
     
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 1, 3, 3, MAXPOOL);
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 1, 3, 3, MAXPOOL);
 
     poolLayer.forward(input);
 
@@ -66,12 +66,12 @@ TEST(PoolingLayer, MaxPooling4) {
 
 }
 
-TEST(PoolingLayer, AvgPooling) {
+TEST(PoolingLayer2D, AvgPooling) {
     cv::Mat input = (cv::Mat_<float>(1, 4*4) << 1, 2, 3, 4,
                                              5, 6, 7, 8,
                                              9, 10, 11, 12,
                                              13, 14, 15, 16);
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 0, 1, 1, AVGPOOL); 
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 0, 1, 1, AVGPOOL); 
 
     poolLayer.forward(input);
 
@@ -83,12 +83,12 @@ TEST(PoolingLayer, AvgPooling) {
 
 }
 
-TEST(PoolingLayer, AvgPooling2) {
+TEST(PoolingLayer2D, AvgPooling2) {
     cv::Mat input = cv::Mat(3, 16, CV_32F);
 
     cv::randu(input, cv::Scalar::all(1), cv::Scalar::all(10));
     
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 1, 3, 3, AVGPOOL);
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 1, 3, 3, AVGPOOL);
 
     poolLayer.forward(input);
 
@@ -98,14 +98,14 @@ TEST(PoolingLayer, AvgPooling2) {
 
 }
 
-TEST(PoolingLayer, Back_Max) {
+TEST(PoolingLayer2D, Back_Max) {
     cv::Mat input_f = (cv::Mat_<float>(1, 4*4) << 1, 2, 3, 4,
                                              5, 6, 7, 8,
                                              9, 10, 11, 12,
                                              13, 14, 15, 16);
     cv::Mat input_b = (cv::Mat_<float>(1, 3*3) << 1, 3, 4, 9, 11, 12, 13, 15, 16);
 
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 1, 1, 1, MAXPOOL); 
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 1, 1, 1, MAXPOOL); 
 
     poolLayer.forward(input_f);
     poolLayer.backward(input_b);
@@ -119,12 +119,12 @@ TEST(PoolingLayer, Back_Max) {
     EXPECT_TRUE(matEqual(poolLayer.getDx(), expected));
 }
 
-TEST(PoolingLayer, Back_Max2) {
+TEST(PoolingLayer2D, Back_Max2) {
     cv::Mat input = cv::Mat(3, 16, CV_32F);
 
     cv::randu(input, cv::Scalar::all(1), cv::Scalar::all(10));
     
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 1, 3, 3, MAXPOOL);
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 1, 3, 3, MAXPOOL);
 
     poolLayer.forward(input);
 
@@ -134,14 +134,14 @@ TEST(PoolingLayer, Back_Max2) {
     poolLayer.backward(d0);
 }
 
-TEST(PoolingLayer, Back_Avg) {
+TEST(PoolingLayer2D, Back_Avg) {
     cv::Mat input_f = (cv::Mat_<float>(1, 4*4) << 1, 2, 3, 4,
                                              5, 6, 7, 8,
                                              9, 10, 11, 12,
                                              13, 14, 15, 16);
     cv::Mat input_b = (cv::Mat_<float>(1, 3*3) << 1, 3, 4, 9, 11, 12, 13, 15, 16);
 
-    PoolingLayer poolLayer(4, 4, 2, 2, 2, 2, 1, 1, 1, AVGPOOL); 
+    PoolingLayer2D poolLayer(4, 4, 2, 2, 2, 2, 1, 1, 1, AVGPOOL); 
 
     poolLayer.forward(input_f);
     poolLayer.backward(input_b);

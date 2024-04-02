@@ -1,5 +1,5 @@
-#ifndef CONVOLUTIONALLAYER_H
-#define CONVOLUTIONALLAYER_H
+#ifndef CONVOLUTIONAL2DLAYER_H
+#define CONVOLUTIONAL2DLAYER_H
 
 #include <vector>
 #include <opencv2/core.hpp>
@@ -10,13 +10,13 @@
 #define SAME 2
 
 
-class ConvolutionalLayer {
+class ConvolutionalLayer2D {
 public:
     // 构造函数
-    ConvolutionalLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w,
+    ConvolutionalLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w,
                        int padding, int inChannels, int outChannels, bool useBias = false);
     // 析构函数
-    ~ConvolutionalLayer();
+    ~ConvolutionalLayer2D();
     //getter function 
     int getInputWidth() const { return inputWidth; }
 
@@ -85,4 +85,4 @@ public:
     void zeroGrad();
 };
 
-#endif // CONVOLUTIONALLAYER_H
+#endif // CONVOLUTIONAL2DLAYER_H

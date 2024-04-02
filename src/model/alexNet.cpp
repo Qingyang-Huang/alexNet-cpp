@@ -3,35 +3,35 @@
 AlexNet::AlexNet(int inputSize_h, int inputSize_w, int outputSize)
 :inputSize_h(inputSize_h), inputSize_w(inputSize_w), outputSize(outputSize){
     //1层
-    C1 = new ConvolutionalLayer(inputSize_h, inputSize_w, 11, 11, 4, 4, 2, 3, 96);   //卷积层
+    C1 = new ConvolutionalLayer2D(inputSize_h, inputSize_w, 11, 11, 4, 4, 2, 3, 96);   //卷积层
     int in_h = C1->getOutputHeight();  
     int in_w = C1->getOutputWidth();
-    S2 = new PoolingLayer(in_h, in_w, 3, 3, 2, 2, 0, C1->getOutChannels(), C1->getOutChannels(), MAXPOOL);   //池化层
+    S2 = new PoolingLayer2D(in_h, in_w, 3, 3, 2, 2, 0, C1->getOutChannels(), C1->getOutChannels(), MAXPOOL);   //池化层
 
     //2层
     in_h = S2->getOutputHeight();
     in_w = S2->getOutputWidth();
-    C3 = new ConvolutionalLayer(in_h, in_w, 5, 5, 1, 1, 2, S2->getOutChannels(), 192);   //卷积层
+    C3 = new ConvolutionalLayer2D(in_h, in_w, 5, 5, 1, 1, 2, S2->getOutChannels(), 192);   //卷积层
     in_h = C3->getOutputHeight();
     in_w = C3->getOutputWidth();
-    S4 = new PoolingLayer(in_h, in_w, 3, 3, 2, 2, 0, C3->getOutChannels(), C3->getOutChannels(), MAXPOOL);    //池化层
+    S4 = new PoolingLayer2D(in_h, in_w, 3, 3, 2, 2, 0, C3->getOutChannels(), C3->getOutChannels(), MAXPOOL);    //池化层
 
     //3
     in_h = S4->getOutputHeight();
     in_w = S4->getOutputWidth();
-    C5 = new ConvolutionalLayer(in_h, in_w, 3, 3, 1, 1, 1, S4->getOutChannels(), 384);   //卷积层
+    C5 = new ConvolutionalLayer2D(in_h, in_w, 3, 3, 1, 1, 1, S4->getOutChannels(), 384);   //卷积层
     //4
     in_h = C5->getOutputHeight();
     in_w = C5->getOutputWidth();
-    C6 = new ConvolutionalLayer(in_h, in_w, 3, 3, 1, 1, 1, C5->getOutChannels(), 256);   //卷积层
+    C6 = new ConvolutionalLayer2D(in_h, in_w, 3, 3, 1, 1, 1, C5->getOutChannels(), 256);   //卷积层
     
     //5
     in_h = C6->getOutputHeight();
     in_w = C6->getOutputWidth();
-    C7 = new ConvolutionalLayer(in_h, in_w, 3, 3, 1, 1, 1, C6->getOutChannels(), 256);   //卷积层
+    C7 = new ConvolutionalLayer2D(in_h, in_w, 3, 3, 1, 1, 1, C6->getOutChannels(), 256);   //卷积层
     in_h = C7->getOutputHeight();
     in_w = C7->getOutputWidth();
-    S8 = new PoolingLayer(in_h, in_w, 3, 3, 2, 2, 0, C7->getOutChannels(), C7->getOutChannels(), MAXPOOL);    //池化层
+    S8 = new PoolingLayer2D(in_h, in_w, 3, 3, 2, 2, 0, C7->getOutChannels(), C7->getOutChannels(), MAXPOOL);    //池化层
 
     //O5层
     in_h = S8->getOutputHeight();

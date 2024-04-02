@@ -7,12 +7,12 @@
 #define AVGPOOL 0
 #define MAXPOOL 1
 
-class PoolingLayer
+class PoolingLayer2D
 {
 public:
-    PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int pad, int inChannels, int outChannels, int poolType = MAXPOOL);
+    PoolingLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int pad, int inChannels, int outChannels, int poolType = MAXPOOL);
 
-    ~PoolingLayer();
+    ~PoolingLayer2D();
 
     int getInputWidth() const { return inputWidth; }
 

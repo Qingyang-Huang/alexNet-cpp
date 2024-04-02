@@ -1,8 +1,8 @@
 #ifndef ALEXNET_H
 #define ALEXNET_H
 
-#include "layers/convolutionalLayer.h"
-#include "layers/poolingLayer.h"
+#include "layers/convolutionalLayer2D.h"
+#include "layers/poolingLayer2D.h"
 #include "layers/linearLayer.h"
 #include "layers/activation.h"
 #include "layers/dropout.h"
@@ -14,14 +14,14 @@ public:
 
 private:
     int inputSize_h, inputSize_w, outputSize;
-    ConvolutionalLayer* C1;
-    PoolingLayer* S2;
-    ConvolutionalLayer* C3;
-    PoolingLayer* S4;
-    ConvolutionalLayer* C5;
-    ConvolutionalLayer* C6;
-    ConvolutionalLayer* C7;
-    PoolingLayer* S8;
+    ConvolutionalLayer2D* C1;
+    PoolingLayer2D* S2;
+    ConvolutionalLayer2D* C3;
+    PoolingLayer2D* S4;
+    ConvolutionalLayer2D* C5;
+    ConvolutionalLayer2D* C6;
+    ConvolutionalLayer2D* C7;
+    PoolingLayer2D* S8;
     LinearLayer* O9;
     LinearLayer* O10;
     LinearLayer* O11;

@@ -1,7 +1,7 @@
-#include "poolingLayer.h"
+#include "poolingLayer2D.h"
 #include <iostream>
 
-PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int padding, int inChannels, int outChannels, int poolType)
+PoolingLayer2D::PoolingLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int padding, int inChannels, int outChannels, int poolType)
   :inputWidth(inputWidth), inputHeight(inputHeight), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride_h(stride_h), stride_w(stride_w), padding(padding), inChannels(inChannels), outChannels(outChannels), poolType(poolType){
     
 
@@ -16,14 +16,14 @@ PoolingLayer::PoolingLayer(int inputWidth, int inputHeight, int kernelHeight, in
 
 }
 
-PoolingLayer::~PoolingLayer(){
+PoolingLayer2D::~PoolingLayer2D(){
   // delete y;
   // delete max_position;
   // delete dx;
 }
 
 //forwad section 
-void PoolingLayer::forward(const cv::Mat &inputData)
+void PoolingLayer2D::forward(const cv::Mat &inputData)
 {
     int paddedHeight = inputHeight + 2 * padding;
     int paddedWidth = inputWidth + 2 * padding;
@@ -69,7 +69,7 @@ void PoolingLayer::forward(const cv::Mat &inputData)
            0.75 0.75 1.5  1.5
 */
 
-void PoolingLayer::backward(const cv::Mat& d0)
+void PoolingLayer2D::backward(const cv::Mat& d0)
 {
     cv::Mat d = d0.reshape(0, outChannels);
     for (int c = 0; c < outChannels; ++c) {
@@ -100,6 +100,6 @@ void PoolingLayer::backward(const cv::Mat& d0)
     }
 }
 
-void PoolingLayer::zeroGrad(){
+void PoolingLayer2D::zeroGrad(){
     dx = cv::Mat::zeros(inChannels, inputHeight * inputWidth, CV_32F);
 }

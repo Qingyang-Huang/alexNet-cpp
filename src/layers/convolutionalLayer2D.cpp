@@ -1,8 +1,8 @@
-#include "convolutionalLayer.h"
+#include "convolutionalLayer2D.h"
 #include <iostream>
 #include <random>
 
-ConvolutionalLayer::ConvolutionalLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth,  int stride_h, int stride_w, int padding, int inChannels, int outChannels, bool useBias)
+ConvolutionalLayer2D::ConvolutionalLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth,  int stride_h, int stride_w, int padding, int inChannels, int outChannels, bool useBias)
     : inputWidth(inputWidth), inputHeight(inputHeight), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride_h(stride_h), stride_w(stride_w), padding(padding),
       inChannels(inChannels), outChannels(outChannels), useBias(useBias){
     // Calculate output dimensions
@@ -43,9 +43,9 @@ ConvolutionalLayer::ConvolutionalLayer(int inputWidth, int inputHeight, int kern
     
 }
 
-ConvolutionalLayer::~ConvolutionalLayer() {}
+ConvolutionalLayer2D::~ConvolutionalLayer2D() {}
 
-cv::Mat ConvolutionalLayer::conv2D(const cv::Mat& inputData, cv::Mat& kernel) {
+cv::Mat ConvolutionalLayer2D::conv2D(const cv::Mat& inputData, cv::Mat& kernel) {
     // kernel是一个4D矩阵[outChannels, inChannels, kernelHeight, kernelWidth]
     // inputData是一个3D矩阵[inChannels, inputHeight, inputWidth]
 
@@ -73,7 +73,7 @@ cv::Mat ConvolutionalLayer::conv2D(const cv::Mat& inputData, cv::Mat& kernel) {
     return outputData;
 }
 
-void ConvolutionalLayer::forward(const cv::Mat inputData) {
+void ConvolutionalLayer2D::forward(const cv::Mat inputData) {
     // 假设mapData、v、y和bias已经正确初始化
     for (int i = 0; i < outChannels; ++i) {
         cv::Mat accumulated = cv::Mat::zeros(1, outputWidth * outputHeight, CV_32F); // 初始化累加器
@@ -89,7 +89,7 @@ void ConvolutionalLayer::forward(const cv::Mat inputData) {
     }
 }
 
-cv::Mat ConvolutionalLayer::transConv2D(const cv::Mat& input, const cv::Mat& kernel) {
+cv::Mat ConvolutionalLayer2D::transConv2D(const cv::Mat& input, const cv::Mat& kernel) {
     // 创建一个扩展后的input矩阵，初始填充为0
     //矩阵两边填充（k-p-1）个padding
     //中间填充(s-1)*(i-1)个padding
@@ -129,7 +129,7 @@ cv::Mat ConvolutionalLayer::transConv2D(const cv::Mat& input, const cv::Mat& ker
     return output.reshape(0,1);
 }
 
-void ConvolutionalLayer::backward(const cv::Mat& d0) {
+void ConvolutionalLayer2D::backward(const cv::Mat& d0) {
     for (int r = 0; r < outputHeight; ++r){
         for (int c = 0; c < outputWidth; ++c){
             for (int i = 0; i < outChannels; ++i){
@@ -147,7 +147,7 @@ void ConvolutionalLayer::backward(const cv::Mat& d0) {
     }
 }
 
-void ConvolutionalLayer::updateWeight(const cv::Mat& input, float learningRate) {
+void ConvolutionalLayer2D::updateWeight(const cv::Mat& input, float learningRate) {
     for (int i = 0; i < outChannels; ++i){
         for (int j = 0; j < inChannels; ++j){
             int kernelIndex = i * inChannels + j;
@@ -160,7 +160,7 @@ void ConvolutionalLayer::updateWeight(const cv::Mat& input, float learningRate) 
     }
 }
 
-void ConvolutionalLayer::zeroGrad(){
+void ConvolutionalLayer2D::zeroGrad(){
     d = cv::Mat::zeros(outputHeight, outputWidth, CV_32F);
     dx = cv::Mat::zeros(inputHeight, inputWidth, CV_32F);
 }
