@@ -13,8 +13,8 @@
 class ConvolutionalLayer {
 public:
     // 构造函数
-    ConvolutionalLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int padding, int stride_h, int stride_w,
-                       int inChannels, int outChannels);
+    ConvolutionalLayer(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w,
+                       int padding, int inChannels, int outChannels, bool useBias = false);
     // 析构函数
     ~ConvolutionalLayer();
     //getter function 
@@ -66,6 +66,7 @@ private:
 
     std::vector<cv::Mat> kernel; // 四维float数组，卷积核本身是二维数据，m*n卷积核就是四维数组
 
+    bool useBias;
     cv::Mat bias; // 偏置，个数为outChannels， 一维float数组
 
 

@@ -4,12 +4,12 @@
 // #include <opencv2/core.hpp>
 #include "activation.h"
 
-class OutputLayer {
+class LinearLayer {
 public:
     // 构造函数
-    OutputLayer(int inputNum, int outputNum);
+    LinearLayer(int inputNum, int outputNum);
     // 析构函数
-    ~OutputLayer();
+    ~LinearLayer();
 
     int getInputNum() const { return inputNum; }
 
@@ -19,15 +19,11 @@ public:
 
     const cv::Mat& getBasicData() const { return bias; }
 
-    const cv::Mat& getV() const { return v; }
-
     const cv::Mat& getY() const { return y; }
 
     const cv::Mat& getD() const { return d; }
 
     const cv::Mat& getDx() const { return dx; }
-
-    const cv::Mat& getGrad() const { return dx; }
   
 
 private:

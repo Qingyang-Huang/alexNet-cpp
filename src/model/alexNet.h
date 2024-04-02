@@ -3,7 +3,9 @@
 
 #include "layers/convolutionalLayer.h"
 #include "layers/poolingLayer.h"
-#include "layers/outputLayer.h"
+#include "layers/linearLayer.h"
+#include "layers/activation.h"
+#include "layers/dropout.h"
 
 class AlexNet {
 public:
@@ -20,10 +22,12 @@ private:
     ConvolutionalLayer* C6;
     ConvolutionalLayer* C7;
     PoolingLayer* S8;
-    OutputLayer* O9;
+    LinearLayer* O9;
+    LinearLayer* O10;
+    LinearLayer* O11;
 
     
-    cv::Mat  e;   // 训练误差
+    cv::Mat  v;   // 预测结果
     cv::Mat  L;   // 瞬时误差能量 
 
 public:
