@@ -1,6 +1,7 @@
 #ifndef ALEXNET_H
 #define ALEXNET_H
 
+
 #include "layers/convolutionalLayer2D.h"
 #include "layers/poolingLayer2D.h"
 #include "layers/linearLayer.h"
@@ -27,15 +28,15 @@ private:
     LinearLayer* O11;
 
     
-    cv::Mat  v;   // 预测结果
-    cv::Mat  L;   // 瞬时误差能量 
+    Tensor<float>  v;   // 预测结果
+    Tensor<float>  L;   // 瞬时误差能量 
 
 public:
-    void forward(cv::Mat input);
-    void backward(cv::Mat input, cv::Mat label);
-    void updateWeight(cv::Mat input, float learningRate);
+    void forward(Tensor<float> input);
+    void backward(Tensor<float> input, Tensor<float> label);
+    void updateWeight(Tensor<float> input, float learningRate);
     void zeroGrad();
-    void train(cv::Mat input, cv::Mat label, float learningRate);
+    void train(Tensor<float> input, Tensor<float> label, float learningRate);
 };
 
 

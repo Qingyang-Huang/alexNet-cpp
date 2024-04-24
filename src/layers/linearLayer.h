@@ -1,8 +1,8 @@
 #ifndef OUTPUT_LAYER_H
 #define OUTPUT_LAYER_H
 #include <vector>
-// #include <opencv2/core.hpp>
 #include "activation.h"
+#include "common/tensor.h"
 
 class LinearLayer {
 public:
@@ -15,36 +15,32 @@ public:
 
     int getOutputNum() const { return outputNum; }
 
-    const cv::Mat& getWData() const { return wData; }
+    const Tensor<float>& getWData() const { return wData; }
 
-    const cv::Mat& getBasicData() const { return bias; }
+    const Tensor<float>& getBasicData() const { return bias; }
 
-    const cv::Mat& getY() const { return y; }
+    const Tensor<float>& getZ() const { return z; }
 
-    const cv::Mat& getD() const { return d; }
+    const Tensor<float>& getD() const { return d; }
 
-    const cv::Mat& getDx() const { return dx; }
+    const Tensor<float>& getDx() const { return dx; }
   
 
 private:
     int inputNum;   //输入数据的数目
     int outputNum;  //输出数据的数目
   
-    cv::Mat wData;      // 权重数据，为一个inputNum*outputNum大小
-    cv::Mat bias;        //偏置，大小为outputNum大小
+    Tensor<float> wData;      // 权重数据，为一个inputNum*outputNum大小
+    Tensor<float> bias;        //偏置，大小为outputNum大小
 
-    cv::Mat v;     // 进入激活函数的输入值
-    cv::Mat y;     // 激活函数后神经元的输出
-    cv::Mat d;     // 网络的局部梯度
-
-    cv::Mat dx;  //grad backword to upper layer
-
-    bool isFullConnect;
+    Tensor<float> z;     // 激活函数后神经元的输出
+    Tensor<float> dx;  //grad backword to upper layer
+    Tensor<float> d;   //grad backword to this layer
 
 public:
-    void forward(const cv::Mat& inputData);
-    void backward(const cv::Mat outputData);
-    void updateWeight(const cv::Mat& input, float learningRate);
+    void forward(const Tensor<float>& inputData);
+    void backward(const Tensor<float> outputData);
+    void updateWeight(const Tensor<float>& input, float learningRate);
     void zeroGrad();
 };
 

@@ -2,166 +2,190 @@
 #include <iostream>
 #include <random>
 
-ConvolutionalLayer2D::ConvolutionalLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth,  int stride_h, int stride_w, int padding, int inChannels, int outChannels, bool useBias)
-    : inputWidth(inputWidth), inputHeight(inputHeight), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride_h(stride_h), stride_w(stride_w), padding(padding),
-      inChannels(inChannels), outChannels(outChannels), useBias(useBias){
-    // Calculate output dimensions
-    outputWidth = ((inputWidth - kernelWidth + 2 * padding) / stride_w) + 1;
-    outputHeight = ((inputHeight - kernelHeight + 2 * padding) / stride_h) + 1;
-    
-    // Initialize matrices
-    y = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
-    d = cv::Mat::zeros(outChannels, outputHeight * outputWidth, CV_32F);
-    dx = cv::Mat::zeros(inChannels, inputHeight * inputWidth, CV_32F);
-    bias = cv::Mat::zeros(1, outChannels, CV_32F);
-
-    // srand(time(nullptr)); //general version
-
+ConvolutionalLayer2D::ConvolutionalLayer2D(int inputHeight, int inputWidth, int kernelHeight, int kernelWidth,  int stride_h, int stride_w, int pad_h, int pad_w, int inChannels, int outChannels, bool useBias)
+    : inputHeight(inputHeight), inputWidth(inputWidth), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride_h(stride_h), stride_w(stride_w), pad_h(pad_h), pad_w(pad_w),
+        inChannels(inChannels), outChannels(outChannels), useBias(useBias),
+        outputWidth(((inputWidth - kernelWidth + 2 * pad_w) / stride_w) + 1),
+        outputHeight(((inputHeight - kernelHeight + 2 * pad_h) / stride_h) + 1),
+        kernels({static_cast<size_t>(outChannels), static_cast<size_t>(inChannels * kernelHeight * kernelWidth)}),
+        bias(static_cast<size_t>(outChannels)),
+        z({static_cast<size_t>(outChannels), static_cast<size_t>(outputHeight) * outputWidth}),
+        a({static_cast<size_t>(outChannels), static_cast<size_t>(outputHeight) * outputWidth}),
+        d({static_cast<size_t>(outChannels), static_cast<size_t>(outputHeight) * outputWidth}),
+        dx({static_cast<size_t>(inChannels), static_cast<size_t>(inputHeight) * inputWidth})
+      {
     //device version
     std::random_device rd;
-    std::mt19937 gen(rd()); 
-    std::uniform_real_distribution<float> dist(-1.0f, 1.0f); // -1 ~ 1
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
-    for (int o = 0; o < outChannels; ++o) {
-        for (int i = 0; i < inChannels; ++i) {
-            // 创建一个大小为 kernelHeight x kernelWidth 的矩阵，元素类型为 float
-            cv::Mat kernelMat(kernelHeight, kernelWidth, CV_32F);
-
-            // 用随机数填充卷积核-1 to 1
-            // cv::randu(kernelMat, cv::Scalar::all(-1), cv::Scalar::all(1));  //general method
-            for (int y = 0; y < kernelMat.rows; ++y) {
-                for (int x = 0; x < kernelMat.cols; ++x) {
-                    kernelMat.at<float>(y, x) = dist(gen); // 生成-1到1之间的随机数
+    for (int i = 0; i < outChannels; ++i) {
+        for (int j = 0; j < inChannels; ++j) {
+            for (int y = 0; y < kernelHeight; ++y) {
+                for (int x = 0; x < kernelWidth; ++x) {
+                    int kernelIndex = y * inChannels + x;
+                    kernels(i, j, kernelIndex) = dist(gen);
                 }
             }
-
-            // 将这个卷积核添加到 kernel 向量中
-            kernel.push_back(kernelMat);
+        }
+        if (useBias) {
+            bias(i) = dist(gen); 
         }
     }
-    
-    
 }
 
 ConvolutionalLayer2D::~ConvolutionalLayer2D() {}
 
-cv::Mat ConvolutionalLayer2D::conv2D(const cv::Mat& inputData, cv::Mat& kernel) {
-    // kernel是一个4D矩阵[outChannels, inChannels, kernelHeight, kernelWidth]
-    // inputData是一个3D矩阵[inChannels, inputHeight, inputWidth]
+Tensor<float> ConvolutionalLayer2D::img2col(const Tensor<float>& imgData) {
+    //img size [inChannels, inputHeight, inputWidth]
+    //col size [inChannels * kernelHeight * kernelWidth, outputHeight * outputWidth]
+    int colHeight = inChannels * kernelHeight * kernelWidth;
+    int colWidth = outputHeight * outputWidth;
+    Tensor<float> colData = Tensor<float>(colHeight, colWidth);
 
-    cv::Mat exInputData;
-    cv::Mat reshapedInputData = inputData.reshape(0, inputHeight);
-    cv::copyMakeBorder(reshapedInputData, exInputData, padding, padding, padding, padding, cv::BORDER_CONSTANT, 0);
-
-    cv::Mat outputData = cv::Mat::zeros(1, outputHeight * outputWidth, CV_32F);
-    
-    for (int y = 0; y < outputHeight; ++y) {
-        for (int x = 0; x < outputWidth; ++x) {
-            float sum = 0.0f;
-            for (int ky = 0; ky < kernelHeight; ++ky) {
-                for (int kx = 0; kx < kernelWidth; ++kx) {
-                    int iy = y * stride_h + ky;
-                    int ix = x * stride_w + kx;
-                    if (iy >= 0 && ix >= 0 && iy < exInputData.rows && ix < exInputData.cols) {
-                        sum += exInputData.at<float>(iy, ix) * kernel.at<float>(ky, kx);
+    for (int i = 0; i < outputHeight; ++i) {
+        for (int j = 0; j < outputWidth; ++j) {
+            for (int c = 0; c < inChannels; ++c) {
+                for (int y = 0; y < kernelHeight; ++y) {
+                    for (int x = 0; x < kernelWidth; ++x) {
+                        int colRow = i * outputWidth + j;
+                        int colCol = c * kernelHeight * kernelWidth + y * kernelWidth + x;
+                        
+                        // Calculate the input image index considering stride and kernel size
+                        int inputY = i * stride_h - pad_h + y;
+                        int inputX = j * stride_w - pad_w + x;
+                        
+                        if (inputY >= 0 && inputY < inputHeight && inputX >= 0 && inputX < inputWidth) {
+                            // Valid index within image bounds
+                            int imgRow = c * inputHeight * inputWidth + inputY * inputWidth + inputX;
+                            colData(colCol, colRow) = imgData(imgRow);
+                        } else {
+                            // Out-of-bounds indices get zero padding
+                            colData(colCol, colRow) = 0;
+                        }
                     }
                 }
             }
-            outputData.at<float>(0, y * outputWidth + x) = sum;
         }
     }
-    return outputData;
+    return colData;
 }
 
-void ConvolutionalLayer2D::forward(const cv::Mat inputData) {
-    // 假设mapData、v、y和bias已经正确初始化
-    for (int i = 0; i < outChannels; ++i) {
-        cv::Mat accumulated = cv::Mat::zeros(1, outputWidth * outputHeight, CV_32F); // 初始化累加器
-        for (int j = 0; j < inChannels; ++j) {
-            int kernelIndex = i * inChannels + j;
-            cv::Mat mapout = conv2D(inputData.row(j), kernel[kernelIndex]);
-            accumulated = accumulated + mapout; // 累加所有输入通道的卷积结果
-        }
-        // 应用激活函数
-        for (int c = 0; c < accumulated.cols; ++c) {
-            y.at<float>(i, c) = relu(accumulated.at<float>(0, c) + bias.at<float>(0, i)); // 加上偏置
-        }    
-    }
-}
 
-cv::Mat ConvolutionalLayer2D::transConv2D(const cv::Mat& input, const cv::Mat& kernel) {
-    // 创建一个扩展后的input矩阵，初始填充为0
-    //矩阵两边填充（k-p-1）个padding
-    //中间填充(s-1)*(i-1)个padding
-    //extend size = (i-1)*(s-1)+2*(k-p-1)
-    cv::Mat reshapedInputData = input.reshape(0, outputWidth);
-    int expandedHeight = (reshapedInputData.rows - 1) * stride_h + 2 * (kernel.rows - padding) - 1;
-    int expandedWidth = (reshapedInputData.cols - 1) * stride_w + 2 * (kernel.cols - padding) - 1;
+void ConvolutionalLayer2D::conv2D(const Tensor<float>& inputData) {
+    // kernels [outChannels, inChannels * kernelHeight * kernelWidth]
+    // inputData [inChannels * kernelHeight * kernelWidth, outputHeight * outputWidth]
+    // kernels.resize(outChannels, inChannels * kernelHeight * kernelWidth);
     
-    cv::Mat expandedInput = cv::Mat::zeros(expandedHeight, expandedWidth, input.type());
-    // 将input中的元素间隔地复制到expandedInput中
-    for (int y = 0; y < reshapedInputData.rows; ++y) {
-        for (int x = 0; x < reshapedInputData.cols; ++x) {
-            expandedInput.at<float>(y * stride_h + (kernel.rows - padding - 1), x * stride_w + (kernel.cols - padding - 1)) = reshapedInputData.at<float>(y,x);
+    // Tensor paddedInputData = Tensor<float>(inChannels, paddedHeight * paddedWidth);
+    // for (int c = 0; c < inChannels; ++c) {
+    //     for (int h = 0; h < inputHeight; ++h) {
+    //         for (int w = 0; w < inputWidth; ++w) {
+    //             paddedInputData(c, (h + pad_h) * paddedHeight + w + pad_w) = inputData(c, h * inputWidth + w);
+    //         }
+    //     }
+    // }
+    
+    // paddedInputData.reshape(inChannels, paddedHeight, paddedWidth).print();
+    Tensor colData = img2col(inputData);
+    // colData.reshape(1, inChannels * kernelHeight * kernelWidth, outputHeight * outputWidth).print();
+    z = kernels.dot(colData);
+    //tmp size [outChannels, outputHeight * outputWidth]
+    // z.reshape(1, outChannels, outputHeight * outputWidth).print();
+    if(useBias){
+        for (int o = 0; o < outChannels; ++o) {
+            for(int idx = 0; idx < outputHeight * outputWidth; ++idx){
+                z(o, idx) += bias(o);
+            }
         }
     }
+}
 
-    cv::Mat output = cv::Mat::zeros(inputHeight, inputWidth, input.type());
+void ConvolutionalLayer2D::forward(const Tensor<float>& inputData) {
+    conv2D(inputData);
+    // activation
+    for (int i = 0; i < outChannels; ++i){
+        for (int j = 0; j < outputHeight * outputWidth; ++j){
+            a(i, j) = relu(z(i, j));
+        }
+    }
+}
 
-    // 对于每个expandedInput元素
-    for (int y = 0; y < expandedHeight - kernel.rows + 1; ++y) {
-        for (int x = 0; x < expandedWidth - kernel.cols + 1; ++x) {
-            // 定义卷积操作的感受野
-            cv::Rect roi(x, y, kernel.cols, kernel.rows);
-            cv::Mat inputROI = expandedInput(roi);
-            // 对于卷积核中的每个元素
-            for (int i = 0; i < kernel.rows; ++i) {
-                for (int j = 0; j < kernel.cols; ++j) {
-                    // 更新输出矩阵的对应位置
-                    // kernel.at<float>(kernel.rows - 1 - i, kernel.cols - 1 - j)计算的是反转后的kernel
-                    output.at<float>(y, x) += inputROI.at<float>(i, j) * kernel.at<float>(kernel.rows - 1 - i, kernel.cols - 1 - j);
-                
+Tensor<float> ConvolutionalLayer2D::col2img(const Tensor<float>& colData) {
+    Tensor<float> imgData = Tensor<float>(inChannels, inputHeight, inputWidth);
+    for (int i = 0; i < outputHeight; ++i) {
+        for (int j = 0; j < outputWidth; ++j) {
+            for (int c = 0; c < inChannels; ++c) {
+                for (int y = 0; y < kernelHeight; ++y) {
+                    for (int x = 0; x < kernelWidth; ++x) {
+                        int colRow = i * outputWidth + j;
+                        int colCol = c * kernelHeight * kernelWidth + y * kernelWidth + x;
+                        int realY = (i * stride_h + y) - pad_h;
+                        int realX = (j * stride_w + x) - pad_w;
+
+                        if (realY >= 0 && realY < inputHeight && realX >= 0 && realX < inputWidth) {
+                            int imgRow = c * inputHeight * inputWidth + realY * inputWidth + realX;
+                            imgData(imgRow) += colData(colRow, colCol);
+                        }
+                    }
                 }
             }
         }
     }
-
-    return output.reshape(0,1);
+    return imgData;
 }
 
-void ConvolutionalLayer2D::backward(const cv::Mat& d0) {
-    for (int r = 0; r < outputHeight; ++r){
-        for (int c = 0; c < outputWidth; ++c){
-            for (int i = 0; i < outChannels; ++i){
-                d.at<float>(i, r*outputHeight+c) = d0.at<float>(i, r*outputHeight+c) * reluDerivative(y.at<float>(i, r*outputHeight+c));
+void ConvolutionalLayer2D::transConv2D(const Tensor<float>& input) {
+    Tensor tmp =  input.t().dot(kernels);
+    // d.reshape(1, outputHeight * outputWidth, inChannels * kernelHeight * kernelWidth).print();  
+    dx = col2img(tmp);
+    // dx.reshape(inChannels, inputHeight, inputWidth).print();
+}
+
+void ConvolutionalLayer2D::backward(const Tensor<float>& d0) {
+    for (int o = 0; o < outChannels; ++o){
+        for (int r = 0; r < outputHeight; ++r){
+            for (int c = 0; c < outputWidth; ++c){
+                int idx = r * outputWidth + c;
+                d(o, idx) = d0(o, idx) * reluDerivative(z(o, idx));
+                // printf("d0: %f, z: %f, d: %f\n", d0(o, idx), z(o, idx), d(o, idx));
             }
         }
     }
-    for (int i = 0; i < inChannels; ++i){
-        for (int j = 0; j < outChannels; ++j){
-            int kernelIndex = j * inChannels + i;
-            cv::Mat dKernel = transConv2D(d.row(j), kernel[kernelIndex]); //update gradient
-            //累加到输入的梯度上
-            dx.row(i) =  dx.row(i) + dKernel;
-        }
-    }
+    transConv2D(d);
 }
 
-void ConvolutionalLayer2D::updateWeight(const cv::Mat& input, float learningRate) {
-    for (int i = 0; i < outChannels; ++i){
-        for (int j = 0; j < inChannels; ++j){
-            int kernelIndex = i * inChannels + j;
-            kernel[kernelIndex] = kernel[kernelIndex] - learningRate * d.at<float>(i) * input.at<float>(j);
+void ConvolutionalLayer2D::updateWeight(const Tensor<float>& al, float learningRate) {
+    Tensor weight = d.dot(img2col(al).t());
+    img2col(al).reshape(inChannels, kernelHeight * kernelWidth, outputHeight * outputWidth).print();
+    weight.reshape(outChannels, inChannels, kernelHeight * kernelWidth).print();
+    kernels -= weight * learningRate;
+    if(useBias){
+        for(int o = 0; o < outChannels; ++o){
+            bias(o) -= learningRate * (d.row(o).sum());
+
         }
-        if(useBias){
-            bias.at<float>(i) = bias.at<float>(i) - learningRate * d.at<float>(i);
-        }
-        
     }
 }
 
 void ConvolutionalLayer2D::zeroGrad(){
-    d = cv::Mat::zeros(outputHeight, outputWidth, CV_32F);
-    dx = cv::Mat::zeros(inputHeight, inputWidth, CV_32F);
+    d.zeros();
+    dx.zeros();
+}
+
+void ConvolutionalLayer2D::setKernels(const Tensor<float>& kernel){
+    if(kernel.size() != kernels.size()){
+        std::cerr << "kernel size not match" << std::endl;
+        return;
+    }
+    kernels = kernel;
+}
+
+void ConvolutionalLayer2D::setBias(const Tensor<float>& bias){
+    if(bias.size() != this->bias.size()){
+        std::cerr << "bias size not match" << std::endl;
+        return;
+    }
+    this->bias = bias;
 }
     

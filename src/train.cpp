@@ -3,14 +3,24 @@
 #include "model/alexNet.h"
 
 int main() {
-    // 创建一个224x224x3的矩阵，元素值在[0, 1]之间
-    cv::Mat randomMat(224, 224, CV_32FC3);
-    cv::randu(randomMat, cv::Scalar::all(0), cv::Scalar::all(1));
+    Tensor<float> randomMat = Tensor<float>(3, 224, 224);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
-    cv::Mat label = cv::Mat::zeros(1, 10, CV_32F);
-    label.at<float>(0, 2) = 1.0; // 第3个元素设置为1
-    label.at<float>(0, 5) = 1.0; // 第6个元素设置为1
-    label.at<float>(0, 7) = 1.0; // 第8个元素设置为1
+    for (int i = 0; i < randomMat.shape()[0]; i++){
+        for (int j = 0; j < randomMat.shape()[1]; j++){
+            for (int k = 0; k < randomMat.shape()[2]; k++){
+                randomMat(i, j, k) = dist(gen);
+            }
+        }
+    }
+    
+
+    Tensor<float> label = Tensor<float>(1, 10);
+    label(0, 2) = 1.0; // 第3个元素设置为1
+    label(0, 5) = 1.0; // 第6个元素设置为1
+    label(0, 7) = 1.0; // 第8个元素设置为1
 
     int epoch = 1;
     int trainNum = 1;

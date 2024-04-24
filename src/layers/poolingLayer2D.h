@@ -1,11 +1,13 @@
 #ifndef POOLINGLAYER_H
 #define POOLINGLAYER_H
 #include <vector>
-#include <opencv2/core.hpp>
+#include "common/tensor.h"
+#include <cfloat> 
 
 
 #define AVGPOOL 0
 #define MAXPOOL 1
+
 
 class PoolingLayer2D
 {
@@ -38,13 +40,11 @@ public:
 
     int getPoolType() const { return poolType; }
 
-    const cv::Mat& getBias() const { return bias; }
+    const Tensor<float>& getZ() const { return z; }
 
-    const cv::Mat& getY() const { return y; }
+    const Tensor<float>& getDx() const { return dx; }
 
-    const cv::Mat& getDx() const { return dx; }
-
-    const cv::Mat& getMaxPosition() const { return max_position; }  
+    const Tensor<float>& getMaxPosition() const { return max_position; }  
 
 private:
     int inputWidth;   //输入图像的宽
@@ -60,17 +60,15 @@ private:
 
     int poolType;     //池化的方法
     
-    cv::Mat bias;    //偏置, 一维float数组
-
-    cv::Mat y;   //采样函数后神经元的输出,无激活函数，三维数组float型
-    cv::Mat dx;   //网络的局部梯度,三维数组float型
-    cv::Mat max_position;   // 最大值模式下最大值的位置，三维数组float型
+    Tensor<float> z;   //采样函数后神经元的输出,无激活函数，三维数组float型
+    Tensor<float> dx;   //网络的局部梯度,三维数组float型
+    Tensor<float> max_position;   // 最大值模式下最大值的位置，三维数组float型
 
 
 public:
-    void forward(const cv::Mat &inputData);
+    void forward(const Tensor<float> &inputData);
 
-    void backward(const cv::Mat& d0);
+    void backward(const Tensor<float>& d0);
 
     void zeroGrad();
 

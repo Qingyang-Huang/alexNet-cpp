@@ -2,20 +2,16 @@
 #define CONVOLUTIONAL2DLAYER_H
 
 #include <vector>
-#include <opencv2/core.hpp>
+#include "common/tensor.h"
 #include "activation.h"
-
-#define FULL 0
-#define VALID 1
-#define SAME 2
 
 
 class ConvolutionalLayer2D {
 public:
     // 构造函数
-    ConvolutionalLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w,
-                       int padding, int inChannels, int outChannels, bool useBias = false);
-    // 析构函数
+    ConvolutionalLayer2D(int inputHeight, int inputWidth, int kernelHeight, int kernelWidth, int stride_h, int stride_w,
+                       int pad_h, int pad_w, int inChannels, int outChannels, bool useBias = false);
+    // 析构函数 
     ~ConvolutionalLayer2D();
     //getter function 
     int getInputWidth() const { return inputWidth; }
@@ -30,21 +26,25 @@ public:
 
     int getStride_w() const { return stride_w; }
 
-    int getPadding() const { return padding; }
+    int getPad_h() const { return pad_h; }
+
+    int getPad_w() const { return pad_w; }
 
     int getInChannels() const { return inChannels; }
 
     int getOutChannels() const { return outChannels; }
 
-    const cv::Mat& getBias() const { return bias; }
+    const Tensor<float>& getKernels() const { return kernels; }
 
-    const cv::Mat& getV() const { return v; }
+    const Tensor<float>& getBias() const { return bias; }
 
-    const cv::Mat& getY() const { return y; }
+    const Tensor<float>& getZ() const { return z; }
 
-    const cv::Mat& getD() const { return d; }
+    const Tensor<float>& getA() const { return a; }
 
-    const cv::Mat& getDx() const { return dx; }
+    const Tensor<float>& getD() const { return d; }
+
+    const Tensor<float>& getDx() const { return dx; }
 
     int getOutputWidth() const { return outputWidth; }
 
@@ -58,31 +58,33 @@ private:
 
     int kernelHeight;      // 卷积核的尺寸
     int kernelWidth;
-    int padding; 
+    int pad_w;
+    int pad_h; 
     int stride_h, stride_w;
 
     int inChannels;   // 输入图像的数目
     int outChannels;  // 输出图像的数目
 
-    std::vector<cv::Mat> kernel; // 四维float数组，卷积核本身是二维数据，m*n卷积核就是四维数组
+    Tensor<float> kernels; // 四维float数组，卷积核本身是二维数据，m*n卷积核就是四维数组
 
     bool useBias;
-    cv::Mat bias; // 偏置，个数为outChannels， 一维float数组
-
-
-    cv::Mat v; // 进入激活函数的输入值,三维数组float型
-    cv::Mat y; // 激活函数后神经元的输出，三维数组float型
-    cv::Mat d; // 网络的局部梯度,三维数组float型
-
-    cv::Mat dx; 
+    Tensor<float> z;
+    Tensor<float> a; 
+    Tensor<float> d; // 梯度
+    Tensor<float> dx; // 输入梯度
+    Tensor<float> bias;
 
 public:
-    void forward(const cv::Mat inputData);
-    cv::Mat conv2D(const cv::Mat& inputData, cv::Mat& kernel);
-    void backward(const cv::Mat& d0);
-    cv::Mat transConv2D(const cv::Mat& input, const cv::Mat& kernel);
-    void updateWeight(const cv::Mat& input, float learningRate);
+    void forward(const Tensor<float>& inputData);
+    void conv2D(const Tensor<float>& inputData);
+    void backward(const Tensor<float>& d0);
+    void transConv2D(const Tensor<float>& d0);
+    Tensor<float> col2img(const Tensor<float>& colData);
+    Tensor<float> img2col(const Tensor<float>& inputData);
+    void updateWeight(const Tensor<float>& inputData, float learningRate);
     void zeroGrad();
+    void setKernels(const Tensor<float>& kernel);
+    void setBias(const Tensor<float>& bias);
 };
 
 #endif // CONVOLUTIONAL2DLAYER_H
