@@ -42,6 +42,8 @@ public:
     void backward(const Tensor<float> outputData);
     void updateWeight(const Tensor<float>& input, float learningRate);
     void zeroGrad();
+    void setWeight(const Tensor<float>& w);
+    void setBias(const Tensor<float>& b);
 };
 
 #endif // OUTPUT_LAYER_H

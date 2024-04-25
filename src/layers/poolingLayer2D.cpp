@@ -1,71 +1,85 @@
 #include "poolingLayer2D.h"
 #include <iostream>
 
-PoolingLayer2D::PoolingLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int padding, int inChannels, int outChannels, int poolType)
+PoolingLayer2D::PoolingLayer2D(int inputWidth, int inputHeight, int kernelHeight, int kernelWidth, int stride_h, int stride_w, int pad_w, int pad_h, int inChannels, int outChannels, int poolType)
   :inputWidth(inputWidth), inputHeight(inputHeight), kernelHeight(kernelHeight), kernelWidth(kernelWidth), stride_h(stride_h), stride_w(stride_w), 
-  padding(padding), inChannels(inChannels), outChannels(outChannels), poolType(poolType),
-  outputWidth(((inputWidth - kernelWidth + 2 * padding) / stride_w) + 1),
-  outputHeight(((inputHeight - kernelHeight + 2 * padding) / stride_h) + 1),
-  z({static_cast<size_t>(outChannels), static_cast<size_t>(outputHeight) * outputWidth}),
-  dx({static_cast<size_t>(inChannels), static_cast<size_t>(inputHeight) * inputWidth}),
-  max_position({static_cast<size_t>(outChannels), static_cast<size_t>(outputHeight) * outputWidth}){}
+  pad_h(pad_h), pad_w(pad_w), inChannels(inChannels), outChannels(outChannels), poolType(poolType),
+  outputWidth(((inputWidth - kernelWidth + 2 * pad_w) / stride_w) + 1),
+  outputHeight(((inputHeight - kernelHeight + 2 * pad_h) / stride_h) + 1),
+  z({static_cast<size_t>(outChannels), static_cast<size_t>(outputHeight * outputWidth)}),
+  dx({static_cast<size_t>(inChannels), static_cast<size_t>(inputHeight * inputWidth)}),
+  max_position({static_cast<size_t>(outChannels), static_cast<size_t>(outputHeight * outputWidth * 2)}){}
 
 PoolingLayer2D::~PoolingLayer2D(){}
 
 //forwad section 
-void PoolingLayer2D::forward(const Tensor<float> &inputData)
-{
-    int paddedHeight = inputHeight + 2 * padding;
-    int paddedWidth = inputWidth + 2 * padding;
-
+void PoolingLayer2D::maxPooling(const Tensor<float> &inputData){
     for (int c = 0; c < outChannels; ++c) {
         for (int i = 0; i < outputHeight; ++i) {
             for (int j = 0; j < outputWidth; ++j) {
-                if (poolType == MAXPOOL) { //max  pooling
-                    float maxVal = -FLT_MAX;
-                    int maxLoc[2];
-                    for (int m = 0; m < kernelHeight; ++m) {
-                        for (int n = 0; n < kernelWidth; ++n) {
-                            int row = i * stride_h + m - padding;
-                            int col = j * stride_w + n - padding;
-                            float tmp;
-                            if (row >= 0 && row < inputHeight && col >= 0 && col < inputWidth) {
-                                int idx = row * inputWidth + col;
-                                tmp = inputData(c, idx);
-                            } else {
-                                tmp = 0;
-                            }
-                            if(tmp > maxVal){
-                                maxVal = tmp;
-                                maxLoc[0] = row;
-                                maxLoc[1] = col;
-                            }
-                            
+              float maxVal = -FLT_MAX;
+              int maxLoc[2] = {-1, -1}; // 初始化为无效位置
+              for (int m = 0; m < kernelHeight; ++m) {
+                  for (int n = 0; n < kernelWidth; ++n) {
+                      int row = i * stride_h + m - pad_h;
+                      int col = j * stride_w + n - pad_w;
+                      if (row >= 0 && row < inputHeight && col >= 0 && col < inputWidth) {
+                          int idx = row * inputWidth + col;
+                          float tmp = inputData(c, idx);
+                          if(tmp > maxVal){
+                              maxVal = tmp;
+                              maxLoc[0] = row;
+                              maxLoc[1] = col;
+                          }
+                      }else{
+                        if(0 > maxVal){
+                            maxVal = 0;
+                            maxLoc[0] = row;
+                            maxLoc[1] = col;
+                        }
+                      }
+                  }
+              }
+              z(c, i * outputWidth + j) = maxVal;
+              max_position(c, (i * outputWidth + j) * 2, 0) = maxLoc[0];
+              max_position(c, (i * outputWidth + j) * 2, 1) = maxLoc[1];
+          }
+        }
+    }
+}
+
+void PoolingLayer2D::avgPooling(const Tensor<float> &inputData){
+    for (int c = 0; c < outChannels; ++c) {
+        for (int i = 0; i < outputHeight; ++i) {
+            for (int j = 0; j < outputWidth; ++j) {
+                float sum = 0;
+                for (int m = 0; m < kernelHeight; ++m) {
+                    for (int n = 0; n < kernelWidth; ++n) {
+                        int row = i * stride_h + m - pad_h;
+                        int col = j * stride_w + n - pad_w;
+                        if (row >= 0 && row < inputHeight && col >= 0 && col < inputWidth) {
+                            int idx = row * inputWidth + col;
+                            sum += inputData(c, idx);
+                        } else {
+                            sum += 0;
                         }
                     }
-                    z(c, i * outputWidth + j) = maxVal;
-                    max_position(c, i * outputWidth + j, 0) = maxLoc[0];
-                    max_position(c, i * outputWidth + j, 1) = maxLoc[1];
-                } else if (poolType == AVGPOOL) { // average pooling
-                    float sum = 0;
-                    for (int m = 0; m < kernelHeight; ++m) {
-                        for (int n = 0; n < kernelWidth; ++n) {
-                            int row = i * stride_h + m - padding;
-                            int col = j * stride_w + n - padding;
-                            float tmp;
-                            if (row >= 0 && row < inputHeight && col >= 0 && col < inputWidth) {
-                                int idx = row * inputWidth + col;
-                                sum += inputData(c, idx);
-                            } else {
-                                sum += 0;
-                            }
-                            
-                        }
-                    }
-                    z(c, i * outputWidth + j) = sum / (kernelHeight * kernelWidth);
                 }
+                z(c, i * outputWidth + j) = sum / (kernelHeight * kernelWidth);
             }
-      }
+        }
+    }
+}
+
+void PoolingLayer2D::forward(const Tensor<float> &inputData)
+{
+    int paddedHeight = inputHeight + 2 * pad_h;
+    int paddedWidth = inputWidth + 2 * pad_w;
+
+    if (poolType == MAXPOOL) { //max  pooling
+        maxPooling(inputData);
+    } else if (poolType == AVGPOOL) {
+        avgPooling(inputData); // average pooling
     }
 }
 
@@ -86,27 +100,28 @@ void PoolingLayer2D::forward(const Tensor<float> &inputData)
 */
 
 void PoolingLayer2D::backward(const Tensor<float>& d0)
-{
+{   
+    Tensor<float> d = d0.reshape(outChannels, outputHeight * outputWidth, 1);
     for (int c = 0; c < outChannels; ++c) {
             // 遍历输出梯度的每个元素
       for (int i = 0; i < outputHeight; ++i) {
         for (int j = 0; j < outputWidth; ++j) {
           //max pooling
           if (poolType == MAXPOOL) {
-            int pos_0 = max_position(c, i * outputWidth + j, 0);
-            int pos_1 = max_position(c, i * outputWidth + j, 1);
-            int idx = pos_1 * inputWidth + pos_0; // 转换回二维索引
-            dx(c, idx) = d0(c, i * outputWidth + j);
+            size_t pos_0 = max_position(c, (i * outputWidth + j) * 2, 0);
+            size_t pos_1 = max_position(c, (i * outputWidth + j) * 2, 1);
+            size_t idx = pos_0 * inputWidth + pos_1; // 转换回二维索引
+            dx(c, idx) = d(c, i * outputWidth + j);
 
           } else if (poolType == AVGPOOL) {
             //average pooling
             for (int m = 0; m < kernelHeight; ++m) {
               for (int n = 0; n < kernelWidth; ++n) {
-                int row = i * stride_h + m - padding;
-                int col = j * stride_w + n - padding;
+                int row = i * stride_h + m - pad_h;
+                int col = j * stride_w + n - pad_w;
                 if (row >= 0 && row < inputHeight && col >= 0 && col < inputWidth) {
                     int idx = row * inputWidth + col; 
-                    dx(c, idx) += d0(c, i * outputWidth + j) / (kernelHeight * kernelWidth);
+                    dx(c, idx) += d(c, i * outputWidth + j) / (kernelHeight * kernelWidth);
                 }
               }
             }

@@ -112,7 +112,7 @@ void ConvolutionalLayer2D::forward(const Tensor<float>& inputData) {
 }
 
 Tensor<float> ConvolutionalLayer2D::col2img(const Tensor<float>& colData) {
-    Tensor<float> imgData = Tensor<float>(inChannels, inputHeight, inputWidth);
+    Tensor<float> imgData = Tensor<float>(inChannels, inputHeight * inputWidth);
     for (int i = 0; i < outputHeight; ++i) {
         for (int j = 0; j < outputWidth; ++j) {
             for (int c = 0; c < inChannels; ++c) {
@@ -157,12 +157,12 @@ void ConvolutionalLayer2D::backward(const Tensor<float>& d0) {
 
 void ConvolutionalLayer2D::updateWeight(const Tensor<float>& al, float learningRate) {
     Tensor weight = d.dot(img2col(al).t());
-    img2col(al).reshape(inChannels, kernelHeight * kernelWidth, outputHeight * outputWidth).print();
-    weight.reshape(outChannels, inChannels, kernelHeight * kernelWidth).print();
+    // img2col(al).reshape(inChannels, kernelHeight * kernelWidth, outputHeight * outputWidth).print();
+    // weight.reshape(outChannels, inChannels, kernelHeight * kernelWidth).print();
     kernels -= weight * learningRate;
     if(useBias){
         for(int o = 0; o < outChannels; ++o){
-            bias(o) -= learningRate * (d.row(o).sum());
+            bias(o) -= learningRate * (d.chan(o).sum());
 
         }
     }

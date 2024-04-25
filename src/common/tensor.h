@@ -100,7 +100,7 @@ public:
             return false;
         }
         for (size_t i = 0; i < dim1 * dim2 * dim3; i++) {
-            if (data[i] != other.data[i]) {
+            if (fabs(data[i] - other.data[i] > T(1e-6))) {
                 return false;
             }
         }
@@ -120,29 +120,41 @@ public:
         return dim1 * dim2 * dim3;
     }
 
-    void resize(size_t row, size_t col, size_t chan) const{
-        if (row * col * chan != dim1 * dim2 * dim3) {
-            throw std::invalid_argument("New shape must be compatible with the old shape");
-        }
-        dim1 = row;
-        dim2 = col;
-        dim3 = chan;
-    }
-    void resize(size_t row, size_t col){
-        size_t size = dim1 * dim2 * dim3;
-        dim1 = row;
-        dim2 = col;
-        dim3 = size / (row * col);
+    size_t getDim1() const {
+        return dim1;
     }
 
-    Tensor<T> reshape(size_t row, size_t col, size_t chan) const {
-        if (row * col * chan != dim1 * dim2 * dim3) {
+    size_t getDim2() const {
+        return dim2;
+    }
+
+    size_t getDim3() const {
+        return dim3;
+    }
+
+    void resize(size_t d1, size_t d2, size_t d3) const{
+        if (d1 * d2 * d3 != dim1 * dim2 * dim3) {
+            throw std::invalid_argument("New shape must be compatible with the old shape");
+        }
+        dim1 = d1;
+        dim2 = d2;
+        dim3 = d3;
+    }
+    void resize(size_t d1, size_t d2){
+        size_t size = dim1 * dim2 * dim3;
+        dim1 = d1;
+        dim2 = d2;
+        dim3 = size / (d1 * d2);
+    }
+
+    Tensor<T> reshape(size_t d1, size_t d2, size_t d3) const {
+        if (d1 * d2 * d3 != dim1 * dim2 * dim3) {
             throw std::invalid_argument("New dimensions must match the number of elements in the tensor.");
         }
-        Tensor<T> result(row, col, chan);
-        for (size_t idx = 0, i = 0; i < row; i++) {
-            for (size_t j = 0; j < col; j++) {
-                for (size_t k = 0; k < chan; k++) {
+        Tensor<T> result(d1, d2, d3);
+        for (size_t idx = 0, i = 0; i < d1; i++) {
+            for (size_t j = 0; j < d2; j++) {
+                for (size_t k = 0; k < d3; k++) {
                     result(i, j, k) = (*this)(idx);
                     idx++;
                 }
@@ -152,32 +164,34 @@ public:
     }
 
     // Function to access elements
-    T& operator()(size_t row, size_t col, size_t chan) {
-        if ((row * dim2 + col) * dim3 + chan >= dim1 * dim2 * dim3 || row < 0 || col < 0 || chan < 0) {
+    T& operator()(size_t d1, size_t d2, size_t d3) {
+        size_t index = d1 * dim2 * dim3 + d2 * dim3 + d3; 
+        if (index >= dim1 * dim2 * dim3 || d1 < 0 || d2 < 0 || d3 < 0) {
             throw std::out_of_range("Index out of range");
         }
-        return data[(row * dim2 + col) * dim3 + chan];
+        return data[index];
     }
 
-    const T& operator()(size_t row, size_t col, size_t chan) const {
-        if ((row * dim2 + col) * dim3 + chan >= dim1 * dim2 * dim3 || row < 0 || col < 0 || chan < 0) {
+    const T& operator()(size_t d1, size_t d2, size_t d3) const {
+        size_t index = d1 * dim2 * dim3 + d2 * dim3 + d3;  
+        if (index >= dim1 * dim2 * dim3 || d1 < 0 || d2 < 0 || d3 < 0) {
             throw std::out_of_range("Index out of range");
         }
-        return data[(row * dim2 + col) * dim3 + chan];
+        return data[index];
     }
 
-    T& operator()(size_t row, size_t col) {
-        if (row * dim2 + col >= dim1 * dim2 || row < 0 || col < 0) {
+    T& operator()(size_t d1, size_t d2) {
+        if (d1 * dim2 + d2 >= dim1 * dim2 || d1 < 0 || d2 < 0) {
             throw std::out_of_range("Index out of range");
         }
-        return data[row * dim2 + col];
+        return data[d1 * dim2 + d2];
     }
 
-    const T& operator()(size_t row, size_t col) const {
-        if (row * dim2 + col >= dim1 * dim2 || row < 0 || col < 0) {
+    const T& operator()(size_t d1, size_t d2) const {
+        if (d1 * dim2 + d2 >= dim1 * dim2 || d1 < 0 || d2 < 0) {
             throw std::out_of_range("Index out of range");
         }
-        return data[row * dim2 + col];
+        return data[d1 * dim2 + d2];
     }
 
     T& operator()(size_t idx) {
@@ -194,40 +208,40 @@ public:
         return data[idx];
     }
 
-    Tensor<T> row(size_t row) const {
-        if (row >= dim1) {
+    Tensor<T> chan(size_t chan) const {
+        if (chan >= dim1) {
             throw std::out_of_range("Index out of range");
         }
         Tensor<T> result(1, dim2, dim3);
         for (size_t i = 0; i < dim2; i++) {
             for (size_t j = 0; j < dim3; j++) {
-                result(0, i, j) = (*this)(row, i, j);
+                result(0, i, j) = (*this)(chan, i, j);
             }
         }
         return result;
     }
 
-    Tensor<T> col(size_t col) const {
-        if (col >= dim2) {
+    Tensor<T> row(size_t r) const {
+        if (r >= dim2) {
             throw std::out_of_range("Index out of range");
         }
         Tensor<T> result(dim1, 1, dim3);
         for (size_t i = 0; i < dim1; i++) {
             for (size_t j = 0; j < dim3; j++) {
-                result(i, 0, j) = (*this)(i, col, j);
+                result(i, 0, j) = (*this)(i, r, j);
             }
         }
         return result;
     }
 
-    Tensor<T> chan(size_t chan) const {
-        if (chan >= dim3) {
+    Tensor<T> col(size_t c) const {
+        if (c >= dim3) {
             throw std::out_of_range("Index out of range");
         }
         Tensor<T> result(dim1, dim2, 1);
         for (size_t i = 0; i < dim1; i++) {
             for (size_t j = 0; j < dim2; j++) {
-                result(i, j, 0) = (*this)(i, j, chan);
+                result(i, j, 0) = (*this)(i, j, c);
             }
         }
         return result;

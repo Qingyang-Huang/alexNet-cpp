@@ -382,19 +382,19 @@ TEST(Convolutional2DLayerTest, update2) {
                                   7, 8, 9, 10,
                                   1, 2, 3, 4,
                                   });
-    convLayer.getD().print();
-
     convLayer.updateWeight(al, 0.1);
 
-    convLayer.getKernels().print();
+    convLayer.getKernels().reshape(1,3,4).print();
 
-    Tensor<float> expected (1, 3 * 2 * 2, {-8.4, -3.1, 
-                                            -7.2, -1, 
-                                            -8.4, -3.1, 
-                                            -7.2, -1, 
-                                            -8.4, -3.1, 
-                                            -7.2, -1, 
+
+    Tensor<float> expected (1, 3 * 2 * 2, {-8.4, -3.1, -7.2, -1, 
+                                           -8.4, -3.1, -7.2, -1, 
+                                           -8.4, -3.1, -7.2, -1, 
                                         });
 
+
+    Tensor<float> expectBias (1, 1, {-2.3});
+
     EXPECT_EQ(convLayer.getKernels(), expected);
+    EXPECT_EQ(convLayer.getBias(),expectBias);
 }

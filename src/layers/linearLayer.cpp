@@ -29,7 +29,7 @@ void LinearLayer::forward(const Tensor<float>& inputData)
     Tensor flattenData = inputData.reshape(1, inputNum, 1); //flatten
     //wData [outputNum, inputNum]  flattenData [1, inputNum]
     //∑in[i]*w[i]
-    Tensor weightedSum = flattenData * wData.t(); 
+    Tensor weightedSum = flattenData.dot(wData.t()); 
     
     //weightSum[1, outputNum]  bias[1, outputNum]
     z = weightedSum + bias;
@@ -38,12 +38,12 @@ void LinearLayer::forward(const Tensor<float>& inputData)
 void LinearLayer::backward(const Tensor<float> d0)
 {
     d = d0;
-    dx = d * wData;          
+    dx = d.dot(wData);          
 }
 
 void LinearLayer::updateWeight(const Tensor<float>& input, float learningRate)
 {
-    Tensor dW = d.t() * input.reshape(1, inputNum, 1); 
+    Tensor dW = d.t().dot(input.reshape(1, inputNum, 1)); 
     wData = wData - dW * learningRate;
     bias = bias - d * learningRate;
 }
@@ -52,4 +52,14 @@ void LinearLayer::zeroGrad()
 {
     d.zeros();
     dx.zeros();
+}
+
+void LinearLayer::setWeight(const Tensor<float>& w)
+{
+    wData = w;
+}
+
+void LinearLayer::setBias(const Tensor<float>& b)
+{
+    bias = b;
 }

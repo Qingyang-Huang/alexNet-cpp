@@ -14,7 +14,7 @@ inline float softmax(float x) { return exp(x); }
 inline Tensor<float> softmax(const Tensor<float>& v) {
     float maxVal = v.max();
 
-    Tensor<float> exp_v(v.size());
+    Tensor<float> exp_v(v.getDim1(), v.getDim2(), v.getDim3());
     for (size_t i = 0; i < v.size(); i++) {
         exp_v(i) = std::exp(v(i) - maxVal); // Subtract maxVal for numerical stability
     }
@@ -25,7 +25,7 @@ inline Tensor<float> softmax(const Tensor<float>& v) {
 
 
 inline Tensor<float> softmaxDerivative(const Tensor<float>& v) {
-    Tensor<float> output(v.size());
+    Tensor<float> output(v.getDim1(), v.getDim2(), v.getDim3());
     for (size_t i = 0; i < v.size(); i++) {
         output(i) = v(i) * (1 - v(i));
     }
